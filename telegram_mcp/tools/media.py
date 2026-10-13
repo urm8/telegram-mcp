@@ -8,6 +8,7 @@ from uuid import uuid4
 from telegram_mcp.runtime import *
 
 from telegram_mcp.contact_sheet import ContactSheetUnavailable, build_contact_sheet
+from telegram_mcp.photo_viewer import PHOTO_VIEWER_HTML, PHOTO_VIEWER_META, PHOTO_VIEWER_URI
 from telegram_mcp.photo_source import (
     AVATAR_SOURCE,
     UnknownPhotoSource,
@@ -19,6 +20,12 @@ from telegram_mcp.photo_source import (
 
 PHOTO_IDENTIFIER_SEARCH_DEPTH = 100
 PHOTO_SHEET_MAXIMUM_TILES = 12
+
+
+@mcp.resource(PHOTO_VIEWER_URI, mime_type="text/html;profile=mcp-app")
+def photo_viewer() -> str:
+    """Render the existing open_photo result without publishing its image."""
+    return PHOTO_VIEWER_HTML
 
 
 def _known_media_size(message) -> Optional[int]:
@@ -610,7 +617,10 @@ async def list_photos(
         return log_and_format_error("list_photos", e, chat_id=chat_id, source=source, limit=limit)
 
 
-@mcp.tool(annotations=ToolAnnotations(title="Open Photo", openWorldHint=True, readOnlyHint=True))
+@mcp.tool(
+    annotations=ToolAnnotations(title="Open Photo", openWorldHint=True, readOnlyHint=True),
+    meta=PHOTO_VIEWER_META,
+)
 @with_account(readonly=True)
 @validate_id("chat_id")
 async def open_photo(
